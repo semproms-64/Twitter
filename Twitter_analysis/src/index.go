@@ -6,24 +6,25 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
+
+var ss []kv
+
+type kv struct {
+	Key   string
+	Value int
+}
 
 func main() {
 
 	//We load the csv file with the data
 	file, err := os.Open("../data/tweets.csv")
 	var validID = regexp.MustCompile(`@([0-9A-Za-z_]+)[== \t]`)
+	var validID2 = regexp.MustCompile(`[== \t]@([0-9A-Za-z_]+)[== \t]`)
 	var validInfo = regexp.MustCompile(`>([0-9A-Za-z_\s"<>:/.=]+)</a>`)
 	var validRT = regexp.MustCompile(`RT[== \t]@([0-9A-Za-z_:]+)[== \t]`)
-
-	/*if validID2.MatchString(" @hola ") {
-		fmt.Println("Match")
-	} else {
-		fmt.Println("It does not match")
-	}
-
-	return*/
 
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -62,7 +63,7 @@ func main() {
 		}
 
 		for i := 0; i < len(record); i++ {
-			line += strings.ToLower(validID.FindString(record[i]))
+			line += strings.ToLower(validID.FindString(record[i])) + strings.ToLower(validID2.FindString(record[i]))
 			lineRT += strings.Trim(validRT.FindString(record[i]), "RT")
 
 			//Number of RT
@@ -88,27 +89,8 @@ func main() {
 		}
 	}
 
-	max := 0
-	name := ""
+	name := topUser(line)
 
-	for index, element := range userCount(line) {
-		if element > max {
-			max = element
-			name = index
-		}
-	}
-
-	fmax := 0
-	fname := ""
-
-	for index, element := range userCount(lineRT) {
-		if element > fmax {
-			fmax = element
-			fname = index
-		}
-	}
-
-	fname = strings.Trim(fname, ":")
 	percentageRT := float64(numRT) / float64(numTweets) * 100
 	percentageInter := float64(numInteractedTweets) / float64(numTweets) * 100
 	ownTweets := numTweets - (numRT + numInteractedTweets)
@@ -121,8 +103,17 @@ func main() {
 	fmt.Println()
 
 	fmt.Println("Number of tweets: ", numTweets)
-	fmt.Println("Most interacted user: ", name, " with ", max, " interactions ")
-	fmt.Println("Most retweeted user: ", fname, " with ", fmax, " RT")
+	fmt.Println("Most interacted user: ", name)
+	fmt.Println()
+	fmt.Println("Top 5 most directly interacted users: ")
+	showTopFive()
+	fmt.Println()
+	name = topUser(lineRT)
+	fmt.Println()
+	fmt.Println("Most retweeted user: ", name)
+	fmt.Println("Top 5 most Retweeted users: ")
+	showTopFive()
+	fmt.Println()
 	fmt.Printf("Number of RT: %v (%.2f%% of tweets)\n", numRT, percentageRT)
 	fmt.Printf("Number of tweets with interactions: %v (%.2f%% of tweets)\n", numInteractedTweets, percentageInter)
 	fmt.Printf("Your own tweets: %v (%.2f%% of tweets)\n", ownTweets, percentageTweets)
@@ -139,6 +130,29 @@ func main() {
 
 }
 
+func topUser(line string) string {
+	max := 0
+	name := ""
+
+	for index, element := range userCount(line) {
+		if element > max {
+			max = element
+			name = index
+		}
+	}
+
+	return name
+}
+
+func showTopFive() {
+
+	m := 0
+
+	for m = 0; m < 5; m++ {
+		fmt.Println(ss[m])
+	}
+}
+
 func userCount(str string) map[string]int {
 	wordList := strings.Fields(str)
 	counts := make(map[string]int)
@@ -152,6 +166,16 @@ func userCount(str string) map[string]int {
 			counts[word] = 1
 		}
 	}
+
+	ss = nil
+
+	for k, v := range counts {
+		ss = append(ss, kv{k, v})
+	}
+
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].Value > ss[j].Value
+	})
 
 	return counts
 }
