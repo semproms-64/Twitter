@@ -22,7 +22,6 @@ func main() {
 	//We load the csv file with the data
 	file, err := os.Open("../data/tweets.csv")
 	var validID = regexp.MustCompile(`@([0-9A-Za-z_]+)[== \t]`)
-	var validID2 = regexp.MustCompile(`[== \t]@([0-9A-Za-z_]+)[== \t]`)
 	var validInfo = regexp.MustCompile(`>([0-9A-Za-z_\s"<>:/.=]+)</a>`)
 	var validRT = regexp.MustCompile(`RT[== \t]@([0-9A-Za-z_:]+)[== \t]`)
 
@@ -41,7 +40,6 @@ func main() {
 
 	line := ""
 	lineRT := ""
-	//numInteractions := 0
 	numRT := 0
 	numTweets := 0
 	numInteractedTweets := 0
@@ -53,7 +51,7 @@ func main() {
 	for {
 		record, err := reader.Read()
 
-		numTweets++
+		numTweets++ //Every different line is a tweet
 
 		if err == io.EOF {
 			break
@@ -62,9 +60,11 @@ func main() {
 			return
 		}
 
+		// We go through all the csv lines
 		for i := 0; i < len(record); i++ {
-			line += strings.ToLower(validID.FindString(record[i])) + strings.ToLower(validID2.FindString(record[i]))
-			lineRT += strings.Trim(validRT.FindString(record[i]), "RT")
+
+			line += strings.ToLower(validID.FindString(record[i]))      //Interactions
+			lineRT += strings.Trim(validRT.FindString(record[i]), "RT") //Retweets
 
 			//Number of RT
 			if strings.HasPrefix(record[i], "RT") {
