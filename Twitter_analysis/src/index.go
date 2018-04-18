@@ -76,9 +76,9 @@ func main() {
 			}
 
 			if validInfo.MatchString(record[i]) {
-				if strings.Contains(record[i], "Web") {
+				if strings.Contains(record[i], "Twitter Web Client") {
 					numWeb++
-				} else if strings.Contains(record[i], "Android") {
+				} else if strings.Contains(record[i], "Twitter for Android") {
 					numAndroid++
 				} else if strings.Contains(record[i], "TweetDeck") {
 					numTweetDeck++
